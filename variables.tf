@@ -11,5 +11,9 @@ variable "project" {
 }
 
 variable "ssh_key" {
-  default = ""
+  description = "Private SSH key injected by CI"
+}
+
+variable "ssh_public_key" {
+  description = "Public SSH key injected by CI"
 }

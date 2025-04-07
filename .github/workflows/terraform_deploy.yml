@@ -40,7 +40,7 @@ jobs:
       - name: Unlock Terraform State (if needed)
         run: |
           terraform plan -detailed-exitcode -no-color -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" || {
-            LOCK_ID=$(terraform force-unlock --dry-run 2>&1 | grep -oP '(?<=ID:\s+)[a-f0-9\-]+')
+            LOCK_ID=$(terraform force-unlock --dry-run 2>&1 | awk '/ID:/ { print $2 }')
             if [ -n "$LOCK_ID" ]; then
               terraform force-unlock "$LOCK_ID"
             fi

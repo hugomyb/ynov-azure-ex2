@@ -37,6 +37,15 @@ jobs:
       - name: Terraform Init (Remote Backend)
         run: terraform init
 
+      - name: Unlock Terraform State (if needed)
+        run: |
+          terraform plan -detailed-exitcode -no-color -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" || {
+            LOCK_ID=$(terraform force-unlock --dry-run 2>&1 | grep -oP '(?<=ID:\s+)[a-f0-9\-]+')
+            if [ -n "$LOCK_ID" ]; then
+              terraform force-unlock "$LOCK_ID"
+            fi
+          }
+
       - name: Terraform Plan
         run: terraform plan -no-color -detailed-exitcode -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
 

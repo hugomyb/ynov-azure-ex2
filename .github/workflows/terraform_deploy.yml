@@ -37,26 +37,8 @@ jobs:
       - name: Terraform Init (Remote Backend)
         run: terraform init
 
-      - name: Terraform Plan with Unlock Fallback
-        run: |
-          set +e
-          terraform plan -no-color -detailed-exitcode -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
-          PLAN_EXIT=$?
-          if [ "$PLAN_EXIT" -eq 1 ]; then
-            echo "Plan failed, trying force-unlock..."
-            LOCK_ID=$(terraform force-unlock --dry-run 2>&1 | awk '/ID:/ { print $2 }')
-            if [ -n "$LOCK_ID" ]; then
-              terraform force-unlock "$LOCK_ID"
-              echo "Retrying plan..."
-              terraform plan -no-color -detailed-exitcode -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
-            else
-              echo "No lock ID found, skipping force-unlock."
-              exit 1
-            fi
-          elif [ "$PLAN_EXIT" -ne 0 ]; then
-            exit $PLAN_EXIT
-          fi
-          set -e
+      - name: Terraform Plan
+        run: terraform plan -no-color -detailed-exitcode -out=plan.tfplan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+        run: terraform apply -auto-approve plan.tfplan
